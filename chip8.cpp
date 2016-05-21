@@ -4,6 +4,7 @@
 #include <map>
 #include <sstream>
 #include <random>
+#include <SFML/Graphics/RectangleShape.hpp>
 #include "chip8.h"
 
 namespace {
@@ -38,8 +39,9 @@ namespace {
 }
 
 
-TChip8Machine::TChip8Machine()
-    : PC(0)
+TChip8Machine::TChip8Machine(sf::RenderWindow& screen)
+    : Screen(screen)
+    , PC(0)
     , I(0)
 {
     Memory.fill(0x0);
@@ -66,8 +68,11 @@ void TChip8Machine::Execute()
     typedef void (TChip8Machine::*TMemberFunc)(uint16_t);
 
     static std::map<uint8_t, TMemberFunc> instructions = {
+        {0x3, &TChip8Machine::SkipIf},
         {0xA, &TChip8Machine::LoadAddr},
-        {0xC, &TChip8Machine::Rnd}
+        {0xC, &TChip8Machine::Rnd},
+        {0xD, &TChip8Machine::Draw},
+
     };
 
 
@@ -111,3 +116,39 @@ void TChip8Machine::Rnd(uint16_t opcode) {
     V.at(registerNumber) = static_cast<uint8_t>(mean & andWith);
 }
 
+void TChip8Machine::SkipIf(uint16_t opcode) {
+    uint16_t registerNumber = GetOctetAt<3>(opcode);
+    uint16_t compareWith = GetOctetsRange<1,2>(opcode);
+
+    std::cout << "SE V" << std::hex << std::uppercase << registerNumber << ", " << std::hex << std::uppercase << compareWith << std::endl;
+
+
+    if (V.at(registerNumber) == compareWith) {
+        PC += 2;
+    }
+}
+
+void TChip8Machine::Draw(uint16_t opcode) {
+    uint16_t regX = GetOctetAt<3>(opcode);
+    uint16_t regY = GetOctetAt<2>(opcode);
+    uint16_t memSize = GetOctetAt<1>(opcode);
+
+    for (int i = 0; i < memSize; ++i) {
+        uint8_t memoryByte = Memory.at(I + i);
+        for (int j = 0; j < 8; ++j) {
+            uint8_t value = (memoryByte >> (7 - j)) & 0x1;
+            DrawPixel(V.at(regX) + i, V.at(regY) + j, value == 1);
+        }
+    }
+
+    Screen.display();
+}
+
+void TChip8Machine::DrawPixel(size_t x, size_t y, bool isEnabled)
+{
+    sf::RectangleShape pixel({10, 10});
+    pixel.setPosition(x * 10, y * 10);
+    pixel.setFillColor(isEnabled ? sf::Color::White : sf::Color::Black);
+
+    Screen.draw(pixel);
+}
