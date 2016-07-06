@@ -1,5 +1,4 @@
 #include <iostream>
-#include <SFML/Graphics.hpp>
 #include "chip8.h"
 
 using namespace std;
@@ -10,11 +9,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    sf::RenderWindow window(sf::VideoMode(640, 320), "My window");
-    window.clear(sf::Color::Black);
-    window.display();
-
-    TChip8Machine chip8Machine(window);
+    TChip8Machine chip8Machine;
     chip8Machine.LoadGame(argv[1]);
     chip8Machine.Execute();
     return 0;
