@@ -11,10 +11,10 @@
 #include <thread>
 #include <SFML/Graphics/Shader.hpp>
 #include <SFML/Window/Context.hpp>
-#include "utils/bitutils.h"
+#include <utils/bitutils.h>
 #include "chip8.h"
-#include "opcode/types.h"
-#include "opcode/parser.h"
+#include <opcode/types.h>
+#include <opcode/parser.h>
 
 namespace {
     std::mutex videoMemoryAccess;
